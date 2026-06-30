@@ -37,7 +37,7 @@ Colunas obrigatórias: `ceqid`, `lat`, `lon`, `event_timestamp`.
 
 | Arquivo | Conteúdo |
 |---|---|
-| `resultado_pontos.xlsx` | Todos os pontos com a área associada e o tempo calculado |
+| `resultado_pontos.xlsx` / `.csv` | Todos os pontos com a área associada e o tempo calculado (exportado em **CSV** quando ultrapassa o limite de 1.048.576 linhas do Excel) |
 | `resumo_por_area.xlsx` | Pontos, horas, equipamentos e primeiro/último registro por área |
 | `resumo_por_equipamento.xlsx` | Horas e pontos por equipamento e área |
 | `mapa.html` | Mapa interativo (Folium) com polígonos e pontos GPS |
