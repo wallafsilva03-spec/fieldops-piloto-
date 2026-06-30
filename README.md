@@ -68,6 +68,10 @@ notebook corrige automaticamente acentuação quebrada (mojibake, ex.:
 - Intervalos **negativos** ou **maiores que 10 minutos** são ignorados.
 - Os sinais de estado (elevador, piloto, carga) recebem *forward-fill* por
   equipamento — o último valor conhecido persiste até a próxima mudança.
+- A coluna **`data`** do resumo por equipamento e os timestamps exportados usam o
+  **fuso local** (`TIMEZONE_LOCAL`, padrão `America/Sao_Paulo`), de modo que o
+  "dia" respeite o horário de Brasília. Ajuste `TIMEZONE_LOCAL` no topo do
+  notebook se sua operação usar outro fuso.
 
 ## Desempenho
 
