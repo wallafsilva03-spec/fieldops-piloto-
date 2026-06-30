@@ -38,17 +38,36 @@ Colunas obrigatórias: `ceqid`, `lat`, `lon`, `event_timestamp`.
 | Arquivo | Conteúdo |
 |---|---|
 | `resultado_pontos.xlsx` / `.csv` | Todos os pontos com a área associada e o tempo calculado (exportado em **CSV** quando ultrapassa o limite de 1.048.576 linhas do Excel) |
-| `resumo_por_area.xlsx` | Pontos, horas, equipamentos e primeiro/último registro por área |
-| `resumo_por_equipamento.xlsx` | Horas e pontos por equipamento e área |
+| `resumo_por_area.xlsx` | Pontos, horas trabalhadas, **horas efetivas**, **horas com piloto**, equipamentos e primeiro/último registro por área |
+| `resumo_por_equipamento.xlsx` | Horas trabalhadas, **horas efetivas**, **horas com piloto** e pontos por equipamento e área |
 | `mapa.html` | Mapa interativo (Folium) com polígonos e pontos GPS |
 
 Todos são disponibilizados para download automaticamente.
+
+## Estados de operação (a partir da coluna `name`)
+
+A telemetria vem em **formato longo** (cada linha é uma leitura de um sinal
+identificado pela coluna `name`). O notebook reconstrói uma tabela com uma linha
+por amostra e calcula dois estados:
+
+| Estado | Regra |
+|---|---|
+| **Tempo efetivo** | carga do motor **≥ 35%** **E** status do elevador = `forward` |
+| **Piloto ligado** | "Status da orientação automática" = `on` |
+
+As palavras-chave que identificam cada sinal são configuráveis no topo do
+notebook (`SINAL_CARGA_MOTOR`, `SINAL_STATUS_ELEVADOR`, `SINAL_PILOTO`,
+`LIMIAR_CARGA_MOTOR`, etc.). A correspondência ignora acentos e maiúsculas, e o
+notebook corrige automaticamente acentuação quebrada (mojibake, ex.:
+`orientaÃ§Ã£o` → `orientação`).
 
 ## Regras de cálculo de tempo
 
 - Ordena por `ceqid` e `event_timestamp`.
 - Tempo de cada ponto = diferença para o ponto anterior **do mesmo equipamento**.
 - Intervalos **negativos** ou **maiores que 10 minutos** são ignorados.
+- Os sinais de estado (elevador, piloto, carga) recebem *forward-fill* por
+  equipamento — o último valor conhecido persiste até a próxima mudança.
 
 ## Desempenho
 
