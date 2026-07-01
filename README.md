@@ -21,8 +21,8 @@ dependências no próprio Colab.
 ## Entradas
 
 ### KML
-Polígonos das áreas agrícolas. Todos os atributos (nome, descrição e campos de
-`ExtendedData`) são preservados e anexados a cada ponto.
+Polígonos das áreas agrícolas. O notebook usa o **nome** e o **ID** de cada área
+para classificar os pontos.
 
 ### ZIP (telemetria)
 Um ou mais CSVs com as colunas:
@@ -33,16 +33,14 @@ ceqid, nickname, vin, name, numeric_value, text_value, uom, event_timestamp, lat
 
 Colunas obrigatórias: `ceqid`, `lat`, `lon`, `event_timestamp`.
 
-## Saídas
+## Saída
 
 | Arquivo | Conteúdo |
 |---|---|
-| `resultado_pontos.xlsx` / `.csv` | Todos os pontos com a área associada e o tempo calculado (exportado em **CSV** quando ultrapassa o limite de 1.048.576 linhas do Excel) |
-| `resumo_por_area.xlsx` | Pontos, horas trabalhadas, **horas efetivas**, **horas com piloto**, equipamentos e primeiro/último registro por área |
-| `resumo_por_equipamento.xlsx` | Horas trabalhadas, **horas efetivas**, **horas com piloto** e pontos por equipamento e área |
-| `mapa.html` | Mapa interativo (Folium) com polígonos e pontos GPS |
+| `resumo_por_equipamento.xlsx` | Por **data / equipamento / área**: horas trabalhadas, **horas efetivas** (carga ≥ 35% + elevador `forward`), **horas com piloto** (orientação automática `on`) e quantidade de pontos |
 
-Todos são disponibilizados para download automaticamente.
+Disponibilizado para download automaticamente. A coluna **`data`** permite
+filtrar por dia.
 
 ## Estados de operação (a partir da coluna `name`)
 
@@ -73,8 +71,15 @@ notebook corrige automaticamente acentuação quebrada (mojibake, ex.:
   "dia" respeite o horário de Brasília. Ajuste `TIMEZONE_LOCAL` no topo do
   notebook se sua operação usar outro fuso.
 
-## Desempenho
+## Desempenho e memória
 
-Projetado para **centenas de milhares de pontos**: usa GeoPandas Spatial Join
-com **índice espacial (R-tree)** e operações **vetorizadas**, evitando loops
-linha a linha.
+Projetado para **milhões de linhas** de telemetria:
+
+- Lê apenas as colunas necessárias dos CSVs e usa dtypes econômicos
+  (`category` para textos repetidos, `float32` para valores) — reduz o uso de RAM
+  em ordens de grandeza.
+- Colapsa a telemetria em **uma linha por amostra** (equipamento + instante).
+- **GeoPandas Spatial Join** com **índice espacial (R-tree)** e operações
+  **vetorizadas**, sem loops linha a linha.
+- Descarta a geometria após o join e libera memória (`del` + `gc`) nas etapas
+  intermediárias.
