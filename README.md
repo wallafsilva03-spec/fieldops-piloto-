@@ -37,7 +37,7 @@ Colunas obrigatórias: `ceqid`, `lat`, `lon`, `event_timestamp`.
 
 | Arquivo | Conteúdo |
 |---|---|
-| `resumo_por_equipamento.xlsx` | Por **data / equipamento / área**: horas trabalhadas, **horas efetivas** (carga ≥ 35% + elevador `forward`), **horas com piloto** (orientação automática `on`) e quantidade de pontos |
+| `resumo_por_equipamento.xlsx` | Por **data / equipamento / área**: horas trabalhadas, **horas efetivas** (carga ≥ 30% + elevador `forward`), **horas com piloto** (orientação automática `on`) e quantidade de pontos |
 
 Disponibilizado para download automaticamente. A coluna **`data`** permite
 filtrar por dia.
@@ -50,7 +50,7 @@ por amostra e calcula dois estados:
 
 | Estado | Regra |
 |---|---|
-| **Tempo efetivo** | carga do motor **≥ 35%** **E** status do elevador = `forward` |
+| **Tempo efetivo** | carga do motor **≥ 30%** **E** status do elevador = `forward` |
 | **Piloto ligado** | "Status da orientação automática" = `on` |
 
 As palavras-chave que identificam cada sinal são configuráveis no topo do
