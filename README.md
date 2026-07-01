@@ -21,8 +21,8 @@ dependências no próprio Colab.
 ## Entradas
 
 ### KML
-Polígonos das áreas agrícolas. Todos os atributos (nome, descrição e campos de
-`ExtendedData`) são preservados e anexados a cada ponto.
+Polígonos das áreas agrícolas. O notebook usa o **nome** e o **ID** de cada área
+para classificar os pontos.
 
 ### ZIP (telemetria)
 Um ou mais CSVs com as colunas:
@@ -33,25 +33,53 @@ ceqid, nickname, vin, name, numeric_value, text_value, uom, event_timestamp, lat
 
 Colunas obrigatórias: `ceqid`, `lat`, `lon`, `event_timestamp`.
 
-## Saídas
+## Saída
 
 | Arquivo | Conteúdo |
 |---|---|
-| `resultado_pontos.xlsx` | Todos os pontos com a área associada e o tempo calculado |
-| `resumo_por_area.xlsx` | Pontos, horas, equipamentos e primeiro/último registro por área |
-| `resumo_por_equipamento.xlsx` | Horas e pontos por equipamento e área |
-| `mapa.html` | Mapa interativo (Folium) com polígonos e pontos GPS |
+| `resumo_por_equipamento.xlsx` | Por **data / equipamento / área**: horas trabalhadas, **horas efetivas** (carga ≥ 35% + elevador `forward`), **horas com piloto** (orientação automática `on`) e quantidade de pontos |
 
-Todos são disponibilizados para download automaticamente.
+Disponibilizado para download automaticamente. A coluna **`data`** permite
+filtrar por dia.
+
+## Estados de operação (a partir da coluna `name`)
+
+A telemetria vem em **formato longo** (cada linha é uma leitura de um sinal
+identificado pela coluna `name`). O notebook reconstrói uma tabela com uma linha
+por amostra e calcula dois estados:
+
+| Estado | Regra |
+|---|---|
+| **Tempo efetivo** | carga do motor **≥ 35%** **E** status do elevador = `forward` |
+| **Piloto ligado** | "Status da orientação automática" = `on` |
+
+As palavras-chave que identificam cada sinal são configuráveis no topo do
+notebook (`SINAL_CARGA_MOTOR`, `SINAL_STATUS_ELEVADOR`, `SINAL_PILOTO`,
+`LIMIAR_CARGA_MOTOR`, etc.). A correspondência ignora acentos e maiúsculas, e o
+notebook corrige automaticamente acentuação quebrada (mojibake, ex.:
+`orientaÃ§Ã£o` → `orientação`).
 
 ## Regras de cálculo de tempo
 
 - Ordena por `ceqid` e `event_timestamp`.
 - Tempo de cada ponto = diferença para o ponto anterior **do mesmo equipamento**.
 - Intervalos **negativos** ou **maiores que 10 minutos** são ignorados.
+- Os sinais de estado (elevador, piloto, carga) recebem *forward-fill* por
+  equipamento — o último valor conhecido persiste até a próxima mudança.
+- A coluna **`data`** do resumo por equipamento e os timestamps exportados usam o
+  **fuso local** (`TIMEZONE_LOCAL`, padrão `America/Sao_Paulo`), de modo que o
+  "dia" respeite o horário de Brasília. Ajuste `TIMEZONE_LOCAL` no topo do
+  notebook se sua operação usar outro fuso.
 
-## Desempenho
+## Desempenho e memória
 
-Projetado para **centenas de milhares de pontos**: usa GeoPandas Spatial Join
-com **índice espacial (R-tree)** e operações **vetorizadas**, evitando loops
-linha a linha.
+Projetado para **milhões de linhas** de telemetria:
+
+- Lê apenas as colunas necessárias dos CSVs e usa dtypes econômicos
+  (`category` para textos repetidos, `float32` para valores) — reduz o uso de RAM
+  em ordens de grandeza.
+- Colapsa a telemetria em **uma linha por amostra** (equipamento + instante).
+- **GeoPandas Spatial Join** com **índice espacial (R-tree)** e operações
+  **vetorizadas**, sem loops linha a linha.
+- Descarta a geometria após o join e libera memória (`del` + `gc`) nas etapas
+  intermediárias.
